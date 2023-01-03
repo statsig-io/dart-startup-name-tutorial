@@ -11,8 +11,7 @@ import 'package:statsig/statsig.dart';
 void main() async {
   final user = StatsigUser(userId: "a-user");
   final options = StatsigOptions(initTimeout: 1);
-  await Statsig.initialize(
-      "client-wlH3WMkysINMhMU8VrNBkbjrEr2JQrqgxKwDPOUosJK", user, options);
+  await Statsig.initialize("client-{SDK_KEY_HERE}", user, options);
   runApp(const MyApp());
 }
 
@@ -55,7 +54,8 @@ class _RandomWordsState extends State<RandomWords> {
 
         Text? trailing;
         var emoji = "";
-        if (Statsig.checkGate("test_public", false)) {
+        var experiment = Statsig.getExperiment("emoji_logos");
+        if (experiment.get("emojis_enabled", false) == true) {
           while (_emojis.length <= i) {
             const minHex = 0x1F300;
             const maxHex = 0x1F3F0;
@@ -74,34 +74,26 @@ class _RandomWordsState extends State<RandomWords> {
           );
         }
 
-        var name = _suggestions[index].asPascalCase;
-        var title = Text(
-          name,
-          style: _biggerFont,
-        );
+        final name = _suggestions[index].asPascalCase;
 
         return ListTile(
           onTap: () {
-            Statsig.logEvent("selected_name",
-                stringValue: name, metadata: {emoji: emoji});
+            Statsig.logEvent("selected_name", stringValue: name);
 
             showDialog(
               context: context,
               builder: (context) => AlertDialog(
-                title: title,
-                content: trailing,
-                actions: [
-                  TextButton(
-                    child: const Text("OK"),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ],
+                title: Text(
+                  name,
+                  style: _biggerFont,
+                ),
               ),
             );
           },
-          title: title,
+          title: Text(
+            name,
+            style: _biggerFont,
+          ),
           trailing: trailing,
         );
       },
